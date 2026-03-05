@@ -13,6 +13,7 @@ import {
   normalizeHypergraphPayload,
   normalizeOntologyPayload,
 } from "@/components/build/kernel-types";
+import type { ScenarioPreset } from "@/lib/scenario-presets";
 import {
   type InputOptions,
   useTokenRegistry,
@@ -69,6 +70,7 @@ type SimulationStateContextValue = {
   setSelectedAction: (value: string | null) => void;
   setNormalizedOntology: (value: OntologyNormalizeResponse | null) => void;
   setHypergraphRetrieval: (value: HypergraphRetrieveResponse | null) => void;
+  loadPreset: (preset: ScenarioPreset) => void;
   clearState: () => void;
 };
 
@@ -246,6 +248,11 @@ export function SimulationStateProvider({
           ...current,
           hypergraphRetrieval: normalizeHypergraphPayload(value)
         })),
+      loadPreset: (preset) =>
+        setState({
+          ...DEFAULT_STATE,
+          ...preset.inputs,
+        }),
       clearState: () => setState(DEFAULT_STATE)
     }),
     [state]

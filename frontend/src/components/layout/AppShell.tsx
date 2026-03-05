@@ -64,8 +64,8 @@ const workflowSteps: WorkflowStep[] = [
   },
   {
     href: "/step-4",
-    label: "Verification",
-    description: "Validate action support and emit a certificate.",
+    label: "Verdict",
+    description: "Derive a runtime verdict from the pre-verified ruleset.",
     Icon: VerifyIcon
   }
 ];

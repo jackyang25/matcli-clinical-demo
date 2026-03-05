@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { VerifyIcon } from "@/components/ui/icons";
 
-type VerificationStatus = "valid" | "rejected" | "incomplete";
+type VerificationStatus = "valid" | "rejected" | "unsupported" | "incomplete";
 
 type VerificationResult = {
   status: VerificationStatus;
@@ -85,12 +85,29 @@ export default function Step4Page() {
     );
     const summary = hypergraphRetrieval.verification;
     const isSupported = summary?.isSupported ?? false;
-    const status: VerificationStatus =
-      isSupported && blockingOutcomes.length === 0 ? "valid" : "rejected";
     const supportLevel = (summary?.supportLevel ?? "unsupported") as
       | "obligated"
       | "allowed"
       | "unsupported";
+
+    let status: VerificationStatus;
+    let reason: string;
+    if (isSupported && blockingOutcomes.length === 0) {
+      status = "valid";
+      reason = `Proposed action is ${supportLevel} by matched hyperedges.`;
+    } else if (blockingOutcomes.length > 0) {
+      status = "rejected";
+      reason = "Conflicting obligation detected from matched hyperedges.";
+    } else if (supportLevel === "unsupported") {
+      status = "unsupported";
+      reason =
+        "No rules in the current ruleset cover this action for the given facts. " +
+        "This is a gap in coverage, not an explicit rejection.";
+    } else {
+      status = "rejected";
+      reason = "Proposed action is not supported by matched hyperedges.";
+    }
+
     const certificateSeed = JSON.stringify({
       action: targetAction,
       support: supportLevel,
@@ -101,12 +118,7 @@ export default function Step4Page() {
 
     return {
       status,
-      reason:
-        status === "valid"
-          ? `Proposed action is ${supportLevel} by matched hyperedges.`
-          : blockingOutcomes.length > 0
-            ? "Conflicting obligation detected from matched hyperedges."
-            : "Proposed action is not supported by matched hyperedges.",
+      reason,
       proposedActionToken: targetAction,
       supportLevel,
       supportingEdgeIds: summary?.supportingEdgeIds ?? [],
@@ -123,13 +135,13 @@ export default function Step4Page() {
         <CardHeader>
           <CardTitle className="inline-flex items-center gap-2">
             <VerifyIcon className="size-4 text-indigo-600" />
-            <span>Step 4: Verification</span>
+            <span>Step 4: Verdict Derivation</span>
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <p className="text-sm text-slate-600">
-            Verify whether the proposed action token is supported by retrieved
-            hyperedges and surface a deterministic verification certificate.
+            Derive a runtime verdict by checking the proposed action against
+            matched hyperedges from the pre-verified ruleset.
           </p>
           <details
             className="group rounded-lg border border-indigo-200 bg-indigo-50/40 p-3 text-xs text-slate-700"
@@ -191,7 +203,7 @@ export default function Step4Page() {
               <div className="flex flex-1 items-center justify-center rounded-lg border border-dashed border-slate-300 bg-white p-4 text-center">
                 <div>
                   <p className="text-sm font-medium text-slate-700">
-                    Verification output will appear here.
+                    Verdict output will appear here.
                   </p>
                   <p className="mt-1 text-xs text-slate-500">
                     {verificationResult.reason}
@@ -202,13 +214,15 @@ export default function Step4Page() {
               <div className="space-y-4">
                 <div className="grid gap-3 md:grid-cols-4">
                   <div className="rounded-lg border border-slate-200 bg-slate-100/80 p-3">
-                    <div className="text-xs text-slate-500">Verification Status</div>
+                    <div className="text-xs text-slate-500">Verdict Status</div>
                     <div className="mt-1">
                       <Badge
                         className={
                           verificationResult.status === "valid"
                             ? "border border-emerald-700 bg-emerald-700 text-white"
-                            : "border border-red-300 bg-red-100 text-red-800"
+                            : verificationResult.status === "unsupported"
+                              ? "border border-amber-300 bg-amber-100 text-amber-800"
+                              : "border border-red-300 bg-red-100 text-red-800"
                         }
                       >
                         {verificationResult.status.charAt(0).toUpperCase() +
@@ -238,7 +252,7 @@ export default function Step4Page() {
 
                 <section className="space-y-2 rounded-lg border border-slate-200 bg-slate-100/70 p-3">
                   <h3 className="text-sm font-medium text-slate-800">
-                    Verification Certificate
+                    Verdict Certificate
                   </h3>
                   <div className="space-y-1 text-sm text-slate-700">
                     <p>
