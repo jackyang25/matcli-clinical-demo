@@ -1,4 +1,4 @@
-# Verified Protocol Hypergraph
+# MatCli Clinical Demonstration
 
 A formally verified obstetrics decision support system. Clinical protocols are encoded as hyperedge rules, verified against safety invariants by a Lean 4 kernel ([Cohere](https://github.com/jackyang25/cohere)), and served through an interactive dashboard.
 
